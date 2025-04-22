@@ -1,29 +1,30 @@
 import { test, expect } from '@playwright/test'
+import dotenv from 'dotenv'
 
-test('Write to testdata collection via API route', async ({ request }) => {
+dotenv.config()
+
+test('Write to testdata with auth (dotenv)', async ({ request }) => {
   const payload = {
-    name: 'Teszt Elek',
-    note: 'Automatikus Playwright teszt jegyzet',
+    name: 'Teszt Elek .env tokennel',
+    note: 'Automatikus teszt dotenv-ből',
     metadata: {
-      browser: 'Playwright',
-      runId: Math.floor(Math.random() * 100000),
-      timestamp: new Date().toISOString(),
+      env: true,
+      ts: new Date().toISOString(),
     },
   }
 
   const response = await request.post('http://localhost:3000/api/write-testdata', {
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.API_WRITE_SECRET}`,
     },
     data: payload,
   })
 
   const json = await response.json()
-  console.log('✅ API válasz:', json)
+  console.log('🔐 API válasz:', json)
 
-  expect(response.status(), `❌ Status: ${response.status()}, Error: ${JSON.stringify(json)}`).toBe(
-    201,
-  )
+  expect(response.status()).toBe(201)
   expect(json.success).toBe(true)
   expect(json.data).toMatchObject(payload)
 })

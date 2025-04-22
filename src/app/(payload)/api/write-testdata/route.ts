@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server'
 import payload, { initPayload } from '@/payload'
 
 export async function POST(request: Request) {
+  const authHeader = request.headers.get('authorization')
+  const expectedToken = process.env.API_WRITE_SECRET
+
+  if (authHeader !== `Bearer ${expectedToken}`) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     await initPayload()
 
