@@ -1,22 +1,34 @@
 import { test, expect } from '@playwright/test'
+import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 
+// Load .env variables
 dotenv.config()
 
-test('Write to testdata with auth (dotenv)', async ({ request }) => {
+test('Write to testdata with JWT auth', async ({ request }) => {
+  // Generate JWT
+  const token = jwt.sign(
+    {
+      user: 'playwright-bot',
+      role: 'tester',
+      exp: Math.floor(Date.now() / 1000) + 60 * 5, // expires in 5 minutes
+    },
+    process.env.API_JWT_SECRET as string,
+  )
+
   const payload = {
-    name: 'Teszt Elek .env tokennel',
-    note: 'Automatikus teszt dotenv-ből',
+    name: 'Teszt Elek JWT-tel',
+    note: 'Ez egy aláírt JWT-vel mentett teszt',
     metadata: {
-      env: true,
-      ts: new Date().toISOString(),
+      via: 'JWT',
+      time: new Date().toISOString(),
     },
   }
 
   const response = await request.post('http://localhost:3000/api/write-testdata', {
     headers: {
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.API_WRITE_SECRET}`,
     },
     data: payload,
   })
